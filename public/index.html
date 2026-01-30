@@ -1272,15 +1272,11 @@ function renderPlayers() {
       <div class="team">${player.team}</div>
     `;
 
-    if (!isPicked) {
-      card.onclick = () => {
-        if (!myTurn) {
-          showWarning("⛔ Wait for your turn!");
-          return;
-        }
-        pickPlayer(player);
-      };
-    }
+  if (!isPicked) {
+  card.onclick = () => {
+    pickPlayer(player);
+}
+
 
     grid.appendChild(card);
   });
