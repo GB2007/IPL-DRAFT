@@ -8,92 +8,106 @@ const io = new Server(server);
 
 app.use(express.static("public"));
 
-const PICK_TIME = 30;
-let rooms = {};
+const rooms = {};
 
-function startTimer(roomId) {
-  const room = rooms[roomId];
-  if (!room) return;
+function generateRoomCode() {
+  return Math.random().toString(36).substring(2, 7).toUpperCase();
+}
 
-  clearInterval(room.interval);
-  room.timer = PICK_TIME;
+io.on("connection", (socket) => {
+  console.log("User connected:", socket.id);
 
-  room.interval = setInterval(() => {
-    room.timer--;
-    io.to(roomId).emit("timer", room.timer);
+  socket.on("createRoom", (name) => {
+    const room = generateRoomCode();
 
-    if (room.timer <= 0) {
-      clearInterval(room.interval);
-      autoPick(roomId);
+    rooms[room] = {
+      players: [{ id: socket.id, name }],
+      turn: 0,
+      draftStarted: false,
+      timer: 30
+    };
+
+    socket.join(room);
+    socket.emit("roomCreated", room);
+  });
+
+  socket.on("joinRoom", ({ name, room }) => {
+    if (!rooms[room]) {
+      socket.emit("errorMsg", "Room does not exist");
+      return;
+    }
+
+    if (rooms[room].players.length >= 2) {
+      socket.emit("errorMsg", "Room already full");
+      return;
+    }
+
+    rooms[room].players.push({ id: socket.id, name });
+    socket.join(room);
+
+    io.to(room).emit("joinedRoom", room);
+    io.to(room).emit("playerJoined", name);
+
+    startDraft(room);
+  });
+
+  socket.on("pick", ({ room, player }) => {
+    const game = rooms[room];
+    if (!game) return;
+
+    const currentPlayer = game.players[game.turn];
+    if (socket.id !== currentPlayer.id) return;
+
+    io.to(room).emit("playerPicked", {
+      by: currentPlayer.name,
+      player
+    });
+
+    game.turn = (game.turn + 1) % 2;
+    game.timer = 30;
+
+    io.to(room).emit("turnUpdate", game.players[game.turn].name);
+  });
+
+  socket.on("disconnect", () => {
+    console.log("User disconnected:", socket.id);
+  });
+});
+
+function startDraft(room) {
+  const game = rooms[room];
+  if (!game || game.draftStarted) return;
+
+  game.draftStarted = true;
+
+  io.to(room).emit("draftStarted", {
+    firstTurn: game.players[0].name
+  });
+
+  startTimer(room);
+}
+
+function startTimer(room) {
+  const game = rooms[room];
+  if (!game) return;
+
+  const interval = setInterval(() => {
+    if (!rooms[room]) {
+      clearInterval(interval);
+      return;
+    }
+
+    game.timer--;
+    io.to(room).emit("timer", game.timer);
+
+    if (game.timer <= 0) {
+      io.to(room).emit("autoPick", game.players[game.turn].name);
+      game.turn = (game.turn + 1) % 2;
+      game.timer = 30;
+      io.to(room).emit("turnUpdate", game.players[game.turn].name);
     }
   }, 1000);
 }
 
-function autoPick(roomId) {
-  const room = rooms[roomId];
-  if (!room) return;
-
-  const available = room.players.filter(
-    p => !room.picked.includes(p.name)
-  );
-
-  if (available.length === 0) return;
-
-  const random =
-    available[Math.floor(Math.random() * available.length)];
-
-  makePick(roomId, random);
-}
-
-function makePick(roomId, player) {
-  const room = rooms[roomId];
-  if (!room || room.picked.includes(player.name)) return;
-
-  const team = room.turn === 1 ? room.team1 : room.team2;
-
-  team.team.push(player);
-  if (player.foreign) team.foreign++;
-
-  room.picked.push(player.name);
-  room.turn = room.turn === 1 ? 2 : 1;
-
-  io.to(roomId).emit("update", room);
-  startTimer(roomId);
-}
-
-io.on("connection", socket => {
-
-  socket.on("createRoom", ({ name, players }) => {
-    const roomId = Math.random().toString(36).substring(2, 7);
-
-    rooms[roomId] = {
-      team1: { name, team: [], foreign: 0 },
-      team2: null,
-      turn: 1,
-      picked: [],
-      players,
-      timer: PICK_TIME,
-      interval: null
-    };
-
-    socket.join(roomId);
-    socket.emit("roomCreated", roomId);
-  });
-
-  socket.on("joinRoom", ({ roomId, name }) => {
-    const room = rooms[roomId];
-    if (!room || room.team2) return;
-
-    room.team2 = { name, team: [], foreign: 0 };
-    socket.join(roomId);
-
-    io.to(roomId).emit("start", room);
-    startTimer(roomId);
-  });
-
-  socket.on("pick", ({ roomId, player }) => {
-    makePick(roomId, player);
-  });
-});
-
-server.listen(process.env.PORT || 3000);
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, () => console.log("Server running on port", PORT));
