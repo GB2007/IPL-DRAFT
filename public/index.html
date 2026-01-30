@@ -1013,7 +1013,8 @@ let currentRoom = null;
 function createRoom() {
   const teamName = document.getElementById("mpPlayerName").value;
   if (!teamName) return alert("Enter team name");
-
+document.getElementById("roomInfo").innerText =
+  "Waiting for opponent to join...";
   socket.emit("createLobby", {
     teamName,
     players
@@ -1032,9 +1033,12 @@ function joinRoom() {
 
 socket.on("roomCreated", (room) => {
   currentRoom = room;
+  lobbyCode = room;
+
   document.getElementById("roomInfo").innerText =
     "Room created: " + room + " (share this code)";
 });
+
 
 socket.on("joinedRoom", (room) => {
   currentRoom = room;
@@ -1063,8 +1067,6 @@ socket.on("errorMsg", (msg) => {
   updateTeamDisplay();
 });
 
-});
-
 socket.on("draftUpdate", ({ state, yourTurn }) => {
   gameState = state;
   myTurn = yourTurn;
@@ -1083,7 +1085,6 @@ socket.on("draftUpdate", ({ state, yourTurn }) => {
   updateTeamDisplay();
 });
 
-});
 
 
         const players = [
@@ -1271,9 +1272,10 @@ socket.on("draftUpdate", ({ state, yourTurn }) => {
                     <div class="team">${player.team}</div>
                 `;
                 
-                if (!isPicked) {
-                    card.onclick = () => pickPlayer(player);
-                }
+                if (!isPicked && myTurn) {
+  card.onclick = () => pickPlayer(player);
+}
+
                 
                 grid.appendChild(card);
             });
