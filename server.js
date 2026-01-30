@@ -8,28 +8,23 @@ const io = new Server(server);
 
 app.use(express.static("public"));
 
-// 🔥 PLAYER DATABASE
-const playersDB = require("./players.json"); 
-// (make sure names exactly match frontend players array)
-
 const lobbies = {};
+const playersDB = require("./players.json");
 
-// 🔢 ROOM CODE GENERATOR
 function generateCode() {
   return Math.random().toString(36).substring(2, 7).toUpperCase();
 }
 
 io.on("connection", (socket) => {
-  console.log("User connected:", socket.id);
 
-  // 🏗 CREATE ROOM
+  // ================= CREATE ROOM =================
   socket.on("createLobby", ({ teamName }) => {
     const code = generateCode();
 
     lobbies[code] = {
       player1Socket: socket.id,
       player2Socket: null,
-      turnSocket: socket.id, // ✅ PLAYER 1 STARTS
+      turnSocket: socket.id, // ✅ FIRST TURN
       state: {
         player1: { name: teamName, team: [], foreignCount: 0 },
         player2: { name: "", team: [], foreignCount: 0 },
@@ -42,27 +37,27 @@ io.on("connection", (socket) => {
     socket.emit("roomCreated", code);
   });
 
-  // 🤝 JOIN ROOM
+  // ================= JOIN ROOM =================
   socket.on("joinLobby", ({ teamName, code }) => {
     const room = lobbies[code];
     if (!room) return socket.emit("errorMsg", "Room not found");
-
-    if (room.player2Socket)
-      return socket.emit("errorMsg", "Room full");
+    if (room.player2Socket) return socket.emit("errorMsg", "Room full");
 
     room.player2Socket = socket.id;
     room.state.player2.name = teamName;
 
     socket.join(code);
 
-    // 🚀 START DRAFT
+    // 🔥 START DRAFT FOR BOTH
     io.to(code).emit("draftStarted", {
-      state: room.state,
-      yourTurn: socket.id === room.turnSocket
+      state: room.state
     });
+
+    // 🔥 ENABLE TURN FOR PLAYER 1
+    io.to(room.turnSocket).emit("yourTurn");
   });
 
-  // 🎯 PICK PLAYER
+  // ================= PICK PLAYER =================
   socket.on("pickPlayer", ({ code, playerName }) => {
     const room = lobbies[code];
     if (!room) return;
@@ -103,32 +98,30 @@ io.on("connection", (socket) => {
         ? room.player1Socket
         : room.player2Socket;
 
-    // 📢 UPDATE BOTH CLIENTS
+    // 🔄 UPDATE STATE FOR BOTH
     io.to(code).emit("draftUpdate", {
-      state: room.state,
-      yourTurn: socket.id === room.turnSocket
+      state: room.state
     });
+
+    // 🎯 ENABLE NEXT PLAYER ONLY
+    io.to(room.turnSocket).emit("yourTurn");
   });
 
-  // ❌ DISCONNECT
+  // ================= DISCONNECT =================
   socket.on("disconnect", () => {
-    console.log("User disconnected:", socket.id);
-
     for (const code in lobbies) {
       const room = lobbies[code];
-
       if (
         room.player1Socket === socket.id ||
         room.player2Socket === socket.id
       ) {
         delete lobbies[code];
-        io.to(code).emit("errorMsg", "Opponent disconnected");
       }
     }
   });
 });
 
-server.listen(3000, () => {
-  console.log("✅ Server running on http://localhost:3000");
-});
+server.listen(3000, () =>
+  console.log("Server running on port 3000")
+);
 
