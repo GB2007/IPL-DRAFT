@@ -1046,6 +1046,7 @@ socket.on("roomCreated", (room) => {
 
 socket.on("joinedRoom", (room) => {
   currentRoom = room;
+  lobbyCode = room; // ✅ ADD THIS
   document.getElementById("roomInfo").innerText =
     "Joined room: " + room;
 });
