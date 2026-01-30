@@ -1056,22 +1056,25 @@ socket.on("errorMsg", (msg) => {
   gameState = state;
   myTurn = yourTurn;
 
-  document.getElementById("setupScreen").style.display = "none";
   document.getElementById("draftScreen").style.display = "block";
 
+  updateTurnIndicator();
+  renderPlayers();
+  updateTeamDisplay();
+});
+socket.on("draftUpdate", ({ state }) => {
+  gameState = state;
 
-  // ✅ SET NAMES FROM SERVER
-  document.getElementById("p1NameDisplay").textContent = state.player1.name;
-  document.getElementById("p2NameDisplay").textContent = state.player2.name;
-  document.getElementById("team1Header").textContent = state.player1.name + "'s Team";
-  document.getElementById("team2Header").textContent = state.player2.name + "'s Team";
-gameState.currentFilter = 'ALL';
-gameState.searchTerm = '';
+  // 🔥 TURN DECIDED PURELY BY SERVER STATE
+  const mySocketId = socket.id;
+  myTurn =
+    (state.currentPlayer === 1 && mySocketId === state.player1Socket) ||
+    (state.currentPlayer === 2 && mySocketId === state.player2Socket);
 
-document.querySelectorAll('.filter-btn').forEach(btn =>
-  btn.classList.remove('active')
-);
-document.querySelector('.filter-btn').classList.add('active');
+  updateTurnIndicator();
+  renderPlayers();
+  updateTeamDisplay();
+});
 
   updateTurnIndicator();
   renderPlayers();
