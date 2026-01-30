@@ -861,6 +861,11 @@
             75% { transform: translateX(12px); }
         }
     </style>
+    #setupScreen {
+  display: none;
+}
+
+
 </head>
 <body>
     <div id="multiplayer-panel" style="padding:15px; background:#111; color:#fff; text-align:center;">
@@ -891,6 +896,7 @@
                 <label>Player 2 Name</label>
                 <input type="text" id="player2Name" placeholder="Enter opponent's name">
             </div>
+            
         </div>
 
         <!-- Draft Screen -->
@@ -927,11 +933,12 @@
                     <div class="search-filter">
                         <input type="text" id="searchPlayer" placeholder="🔍 Search players..." onkeyup="filterPlayers()">
                         <div class="filter-buttons">
-                            <button class="filter-btn active" onclick="filterByRole('ALL')">All Players</button>
-                            <button class="filter-btn" onclick="filterByRole('Batsman')">🏏 Batsmen</button>
-                            <button class="filter-btn" onclick="filterByRole('Bowler')">⚡ Bowlers</button>
-                            <button class="filter-btn" onclick="filterByRole('All-Rounder')">🌟 All-Rounders</button>
-                            <button class="filter-btn" onclick="filterByRole('Wicket-Keeper')">🧤 Wicket-Keepers</button>
+                         <button class="filter-btn active" onclick="filterByRole('ALL', this)">All Players</button>
+<button class="filter-btn" onclick="filterByRole('Batsman', this)">🏏 Batsmen</button>
+<button class="filter-btn" onclick="filterByRole('Bowler', this)">⚡ Bowlers</button>
+<button class="filter-btn" onclick="filterByRole('All-Rounder', this)">🌟 All-Rounders</button>
+<button class="filter-btn" onclick="filterByRole('Wicket-Keeper', this)">🧤 Wicket-Keepers</button>
+
                         </div>
                     </div>
                     <div class="player-grid" id="playerGrid"></div>
@@ -1310,7 +1317,7 @@ function pickPlayer(player) {
 
             teamData.team.forEach((player, index) => {
                 const li = document.createElement('li');
-                li.draggable = true;
+                li.draggable = false;
                 li.dataset.index = index;
                 li.dataset.team = teamNumber;
                 
@@ -1371,16 +1378,17 @@ function pickPlayer(player) {
             document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
         }
 
-        function filterByRole(role) {
-            gameState.currentFilter = role;
-            
-            document.querySelectorAll('.filter-btn').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            event.target.classList.add('active');
-            
-            renderPlayers();
-        }
+      function filterByRole(role, btn) {
+  gameState.currentFilter = role;
+
+  document.querySelectorAll('.filter-btn').forEach(b => {
+    b.classList.remove('active');
+  });
+
+  btn.classList.add('active');
+  renderPlayers();
+}
+
 
         function filterPlayers() {
             gameState.searchTerm = document.getElementById('searchPlayer').value;
