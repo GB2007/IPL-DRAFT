@@ -8,131 +8,98 @@ const io = new Server(server);
 
 app.use(express.static("public"));
 
-/* ===============================
-   IN-MEMORY LOBBIES
-================================ */
 const lobbies = {};
+const playersDB = require("./players.json"); // optional, or paste array here
 
-/* ===============================
-   SOCKET LOGIC
-================================ */
+function generateCode() {
+  return Math.random().toString(36).substring(2, 7).toUpperCase();
+}
+
 io.on("connection", (socket) => {
-  console.log("User connected:", socket.id);
 
-  /* ---------- CREATE LOBBY ---------- */
-  socket.on("createLobby", ({ teamName, players }) => {
-    const code = Math.random().toString(36).substring(2, 7).toUpperCase();
+  socket.on("createLobby", ({ teamName }) => {
+    const code = generateCode();
 
     lobbies[code] = {
-      playersPool: players,
-      sockets: [socket.id],
+      players: [],
       state: {
         player1: { name: teamName, team: [], foreignCount: 0 },
         player2: { name: "", team: [], foreignCount: 0 },
-        pickedPlayers: [],
-        currentPlayer: 1
+        currentPlayer: 1,
+        pickedPlayers: []
       }
     };
 
+    lobbies[code].players.push(socket.id);
     socket.join(code);
     socket.emit("roomCreated", code);
   });
 
-  /* ---------- JOIN LOBBY ---------- */
   socket.on("joinLobby", ({ teamName, code }) => {
     const lobby = lobbies[code];
+    if (!lobby) return socket.emit("errorMsg", "Room not found");
 
-    if (!lobby) {
-      socket.emit("errorMsg", "Room does not exist");
-      return;
-    }
+    if (lobby.players.length >= 2)
+      return socket.emit("errorMsg", "Room full");
 
-    if (lobby.sockets.length >= 2) {
-      socket.emit("errorMsg", "Room is full");
-      return;
-    }
-
-    lobby.sockets.push(socket.id);
+    lobby.players.push(socket.id);
     lobby.state.player2.name = teamName;
-
     socket.join(code);
-    socket.emit("joinedRoom", code);
 
-    /* ---------- AUTO START DRAFT ---------- */
     io.to(code).emit("draftStarted", {
       state: lobby.state,
-      yourTurn: lobby.sockets[0] === socket.id ? false : true
-    });
-
-    // Tell first player it's their turn
-    io.to(lobby.sockets[0]).emit("draftUpdate", {
-      state: lobby.state,
-      yourTurn: true
+      yourTurn: lobby.players[0] === socket.id
     });
   });
 
-  /* ---------- PICK PLAYER ---------- */
   socket.on("pickPlayer", ({ code, playerName }) => {
     const lobby = lobbies[code];
     if (!lobby) return;
 
+    const state = lobby.state;
     const currentSocket =
-      lobby.state.currentPlayer === 1
-        ? lobby.sockets[0]
-        : lobby.sockets[1];
+      state.currentPlayer === 1
+        ? lobby.players[0]
+        : lobby.players[1];
 
-    // ❌ Not your turn
     if (socket.id !== currentSocket) return;
 
-    // ❌ Already picked
-    if (lobby.state.pickedPlayers.includes(playerName)) return;
+    if (state.pickedPlayers.includes(playerName)) return;
 
-    const player = lobby.playersPool.find(p => p.name === playerName);
+    const player = playersDB.find(p => p.name === playerName);
     if (!player) return;
 
     const team =
-      lobby.state.currentPlayer === 1
-        ? lobby.state.player1
-        : lobby.state.player2;
+      state.currentPlayer === 1 ? state.player1 : state.player2;
 
-    // Constraints
-    if (team.team.length >= 11) return;
     if (player.foreign && team.foreignCount >= 4) return;
+    if (team.team.length >= 11) return;
 
-    // Add player
     team.team.push(player);
-    lobby.state.pickedPlayers.push(player.name);
+    state.pickedPlayers.push(player.name);
     if (player.foreign) team.foreignCount++;
 
-    // Switch turn
-    lobby.state.currentPlayer =
-      lobby.state.currentPlayer === 1 ? 2 : 1;
+    state.currentPlayer = state.currentPlayer === 1 ? 2 : 1;
 
-    // Sync both players
-    lobby.sockets.forEach((id, idx) => {
-      io.to(id).emit("draftUpdate", {
-        state: lobby.state,
-        yourTurn: lobby.state.currentPlayer === idx + 1
-      });
+    io.to(code).emit("draftUpdate", {
+      state,
+      yourTurn:
+        lobby.players[state.currentPlayer - 1] === socket.id
     });
   });
 
-  /* ---------- DISCONNECT ---------- */
   socket.on("disconnect", () => {
     for (const code in lobbies) {
-      const lobby = lobbies[code];
-      if (lobby.sockets.includes(socket.id)) {
+      lobbies[code].players = lobbies[code].players.filter(
+        id => id !== socket.id
+      );
+      if (lobbies[code].players.length === 0) {
         delete lobbies[code];
-        io.to(code).emit("errorMsg", "Opponent disconnected");
       }
     }
   });
 });
 
-/* ===============================
-   START SERVER
-================================ */
-const PORT = process.env.PORT || 3000;
-server.listen(PORT, () =>
-  console.log("Server running on port", PORT)
+server.listen(3000, () =>
+  console.log("Server running on port 3000")
 );
