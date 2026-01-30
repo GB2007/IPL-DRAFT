@@ -52,41 +52,59 @@ io.on("connection", (socket) => {
     });
   });
 
-  socket.on("pickPlayer", ({ code, playerName }) => {
-    const lobby = lobbies[code];
-    if (!lobby) return;
+ socket.on("pickPlayer", ({ code, playerName }) => {
+  const room = lobbies[code];
+  if (!room) return;
 
-    const state = lobby.state;
-    const currentSocket =
-      state.currentPlayer === 1
-        ? lobby.players[0]
-        : lobby.players[1];
+  // ❌ Not your turn
+  if (socket.id !== room.turnSocket) return;
 
-    if (socket.id !== currentSocket) return;
+  // ❌ Already picked
+  if (room.state.pickedPlayers.includes(playerName)) return;
 
-    if (state.pickedPlayers.includes(playerName)) return;
+  // 🔍 Find player
+  const player = playersDB.find(p => p.name === playerName);
+  if (!player) return;
 
-    const player = playersDB.find(p => p.name === playerName);
-    if (!player) return;
+  // 👤 Current team
+  const currentTeam =
+    room.state.currentPlayer === 1
+      ? room.state.player1
+      : room.state.player2;
 
-    const team =
-      state.currentPlayer === 1 ? state.player1 : state.player2;
+  // ❌ Team full
+  if (currentTeam.team.length >= 11) return;
 
-    if (player.foreign && team.foreignCount >= 4) return;
-    if (team.team.length >= 11) return;
+  // ❌ Overseas limit
+  if (player.foreign && currentTeam.foreignCount >= 4) return;
 
-    team.team.push(player);
-    state.pickedPlayers.push(player.name);
-    if (player.foreign) team.foreignCount++;
+  // ✅ ADD PLAYER
+  currentTeam.team.push(player);
+  room.state.pickedPlayers.push(player.name);
+  if (player.foreign) currentTeam.foreignCount++;
 
-    state.currentPlayer = state.currentPlayer === 1 ? 2 : 1;
+  // 🔁 SWITCH TURN
+  room.state.currentPlayer =
+    room.state.currentPlayer === 1 ? 2 : 1;
 
-    io.to(code).emit("draftUpdate", {
-      state,
-      yourTurn:
-        lobby.players[state.currentPlayer - 1] === socket.id
-    });
+  room.turnSocket =
+    room.turnSocket === room.player1Socket
+      ? room.player2Socket
+      : room.player1Socket;
+
+  // 📢 UPDATE BOTH PLAYERS
+  io.to(code).emit("draftUpdate", {
+    state: room.state,
+    yourTurn: false
   });
+
+  // 🎯 ENABLE NEXT PLAYER
+  io.to(room.turnSocket).emit("draftUpdate", {
+    state: room.state,
+    yourTurn: true
+  });
+});
+
 
   socket.on("disconnect", () => {
     for (const code in lobbies) {
