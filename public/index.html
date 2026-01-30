@@ -1003,27 +1003,33 @@
 <script src="/socket.io/socket.io.js"></script>
 
     <script>
+
+        const socket = io();
+let lobbyCode = null;
+let myTurn = false;
+
         // IPL 2025 Complete Player Database
         const socket = io();
 let currentRoom = null;
 
 function createRoom() {
-  const name = document.getElementById("mpPlayerName").value;
-  if (!name) {
-    alert("Enter your name");
-    return;
-  }
-  socket.emit("createRoom", name);
+  const teamName = document.getElementById("mpPlayerName").value;
+  if (!teamName) return alert("Enter team name");
+
+  socket.emit("createLobby", {
+    teamName,
+    players
+  });
 }
 
 function joinRoom() {
-  const name = document.getElementById("mpPlayerName").value;
-  const room = document.getElementById("roomInput").value;
-  if (!name || !room) {
-    alert("Enter name and room code");
-    return;
-  }
-  socket.emit("joinRoom", { name, room });
+  const teamName = document.getElementById("mpPlayerName").value;
+  const code = document.getElementById("roomInput").value;
+
+  if (!teamName || !code) return alert("Enter name and code");
+
+  lobbyCode = code;
+  socket.emit("joinLobby", { teamName, code });
 }
 
 socket.on("roomCreated", (room) => {
@@ -1265,18 +1271,15 @@ socket.on("errorMsg", (msg) => {
             }, 3000);
         }
 
-        function pickPlayer(player) {
-            const currentTeam = gameState.currentPlayer === 1 ? gameState.player1 : gameState.player2;
-            
-            if (currentTeam.team.length >= 11) {
-                showWarning('⚠️ Team is full! You already have 11 players.');
-                return;
-            }
+function pickPlayer(player) {
+  if (!myTurn) return;
 
-            if (player.foreign && currentTeam.foreignCount >= 4) {
-                showWarning('⚠️ 4 OVERSEAS PLAYERS EXCEEDED! You can only have 4 foreign players.');
-                return;
-            }
+  socket.emit("pickPlayer", {
+    code: lobbyCode,
+    playerName: player.name
+  });
+}
+
 
             currentTeam.team.push(player);
             gameState.pickedPlayers.push(player.name);
