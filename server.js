@@ -8,106 +8,116 @@ const io = new Server(server);
 
 app.use(express.static("public"));
 
-const rooms = {};
+const lobbies = {};
+const PICK_TIME = 30;
 
-function generateRoomCode() {
+function generateCode() {
   return Math.random().toString(36).substring(2, 7).toUpperCase();
 }
 
 io.on("connection", (socket) => {
-  console.log("User connected:", socket.id);
+  console.log("Connected:", socket.id);
 
-  socket.on("createRoom", (name) => {
-    const room = generateRoomCode();
+  // CREATE LOBBY
+  socket.on("createLobby", ({ teamName, players }) => {
+    const code = generateCode();
 
-    rooms[room] = {
-      players: [{ id: socket.id, name }],
-      turn: 0,
-      draftStarted: false,
-      timer: 30
+    lobbies[code] = {
+      code,
+      teams: [{ id: socket.id, name: teamName, picks: [] }],
+      availablePlayers: [...players],
+      turnIndex: 0,
+      timer: PICK_TIME,
+      interval: null,
+      started: false
     };
 
-    socket.join(room);
-    socket.emit("roomCreated", room);
+    socket.join(code);
+    socket.emit("lobbyCreated", code);
   });
 
-  socket.on("joinRoom", ({ name, room }) => {
-    if (!rooms[room]) {
-      socket.emit("errorMsg", "Room does not exist");
+  // JOIN LOBBY
+  socket.on("joinLobby", ({ code, teamName }) => {
+    const lobby = lobbies[code];
+    if (!lobby) {
+      socket.emit("errorMsg", "Lobby not found");
       return;
     }
 
-    if (rooms[room].players.length >= 2) {
-      socket.emit("errorMsg", "Room already full");
+    if (lobby.teams.length >= 2) {
+      socket.emit("errorMsg", "Lobby already full");
       return;
     }
 
-    rooms[room].players.push({ id: socket.id, name });
-    socket.join(room);
+    lobby.teams.push({ id: socket.id, name: teamName, picks: [] });
+    socket.join(code);
 
-    io.to(room).emit("joinedRoom", room);
-    io.to(room).emit("playerJoined", name);
-
-    startDraft(room);
+    lobby.started = true;
+    startDraft(lobby);
   });
 
-  socket.on("pick", ({ room, player }) => {
-    const game = rooms[room];
-    if (!game) return;
+  // PICK PLAYER
+  socket.on("pickPlayer", ({ code, playerName }) => {
+    const lobby = lobbies[code];
+    if (!lobby) return;
 
-    const currentPlayer = game.players[game.turn];
-    if (socket.id !== currentPlayer.id) return;
+    const currentTeam = lobby.teams[lobby.turnIndex];
+    if (currentTeam.id !== socket.id) return;
 
-    io.to(room).emit("playerPicked", {
-      by: currentPlayer.name,
-      player
-    });
+    const player = lobby.availablePlayers.find(p => p.name === playerName);
+    if (!player) return;
 
-    game.turn = (game.turn + 1) % 2;
-    game.timer = 30;
+    currentTeam.picks.push(player);
+    lobby.availablePlayers = lobby.availablePlayers.filter(
+      p => p.name !== playerName
+    );
 
-    io.to(room).emit("turnUpdate", game.players[game.turn].name);
+    lobby.turnIndex = (lobby.turnIndex + 1) % lobby.teams.length;
+    lobby.timer = PICK_TIME;
+
+    io.to(code).emit("stateUpdate", lobby);
   });
 
   socket.on("disconnect", () => {
-    console.log("User disconnected:", socket.id);
+    console.log("Disconnected:", socket.id);
   });
 });
 
-function startDraft(room) {
-  const game = rooms[room];
-  if (!game || game.draftStarted) return;
-
-  game.draftStarted = true;
-
-  io.to(room).emit("draftStarted", {
-    firstTurn: game.players[0].name
-  });
-
-  startTimer(room);
+function startDraft(lobby) {
+  io.to(lobby.code).emit("draftStarted", lobby);
+  startTimer(lobby);
 }
 
-function startTimer(room) {
-  const game = rooms[room];
-  if (!game) return;
+function startTimer(lobby) {
+  clearInterval(lobby.interval);
 
-  const interval = setInterval(() => {
-    if (!rooms[room]) {
-      clearInterval(interval);
-      return;
-    }
+  lobby.interval = setInterval(() => {
+    lobby.timer--;
+    io.to(lobby.code).emit("timerUpdate", lobby.timer);
 
-    game.timer--;
-    io.to(room).emit("timer", game.timer);
-
-    if (game.timer <= 0) {
-      io.to(room).emit("autoPick", game.players[game.turn].name);
-      game.turn = (game.turn + 1) % 2;
-      game.timer = 30;
-      io.to(room).emit("turnUpdate", game.players[game.turn].name);
+    if (lobby.timer <= 0) {
+      autoPick(lobby);
     }
   }, 1000);
 }
 
-const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => console.log("Server running on port", PORT));
+function autoPick(lobby) {
+  if (lobby.availablePlayers.length === 0) return;
+
+  const random =
+    lobby.availablePlayers[
+      Math.floor(Math.random() * lobby.availablePlayers.length)
+    ];
+
+  lobby.teams[lobby.turnIndex].picks.push(random);
+  lobby.availablePlayers = lobby.availablePlayers.filter(
+    p => p.name !== random.name
+  );
+
+  lobby.turnIndex = (lobby.turnIndex + 1) % lobby.teams.length;
+  lobby.timer = PICK_TIME;
+
+  io.to(lobby.code).emit("stateUpdate", lobby);
+}
+
+server.listen(process.env.PORT || 3000);
