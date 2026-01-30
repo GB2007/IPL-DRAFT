@@ -1066,6 +1066,13 @@ socket.on("errorMsg", (msg) => {
   document.getElementById("p2NameDisplay").textContent = state.player2.name;
   document.getElementById("team1Header").textContent = state.player1.name + "'s Team";
   document.getElementById("team2Header").textContent = state.player2.name + "'s Team";
+gameState.currentFilter = 'ALL';
+gameState.searchTerm = '';
+
+document.querySelectorAll('.filter-btn').forEach(btn =>
+  btn.classList.remove('active')
+);
+document.querySelector('.filter-btn').classList.add('active');
 
   updateTurnIndicator();
   renderPlayers();
@@ -1090,6 +1097,13 @@ if (totalPicked === 22) {
   document.getElementById("p2NameDisplay").textContent = state.player2.name;
   document.getElementById("team1Header").textContent = state.player1.name + "'s Team";
   document.getElementById("team2Header").textContent = state.player2.name + "'s Team";
+gameState.currentFilter = 'ALL';
+gameState.searchTerm = '';
+
+document.querySelectorAll('.filter-btn').forEach(btn =>
+  btn.classList.remove('active')
+);
+document.querySelector('.filter-btn').classList.add('active');
 
   updateTurnIndicator();
   renderPlayers();
@@ -1283,14 +1297,16 @@ if (totalPicked === 22) {
                     <div class="team">${player.team}</div>
                 `;
                 
-                if (!isPicked && myTurn) {
-  card.onclick = () => pickPlayer(player);
+                if (!isPicked) {
+  card.onclick = () => {
+    if (!myTurn) {
+      showWarning("⛔ Wait for your turn!");
+      return;
+    }
+    pickPlayer(player);
+  };
 }
 
-                
-                grid.appendChild(card);
-            });
-        }
 
         function showWarning(message) {
             const warning = document.getElementById('warningMessage');
