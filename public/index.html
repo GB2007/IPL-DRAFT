@@ -1022,10 +1022,7 @@ function createRoom() {
   if (!teamName) return alert("Enter team name");
 document.getElementById("roomInfo").innerText =
   "Waiting for opponent to join...";
-  socket.emit("createLobby", {
-    teamName,
-    players
-  });
+ socket.emit("createLobby", { teamName });
 }
 
 function joinRoom() {
