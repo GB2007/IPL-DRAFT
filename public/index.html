@@ -1048,12 +1048,6 @@ socket.on("yourTurn", () => {
   renderPlayers();
 });
 
-socket.on("joinedRoom", (room) => {
-  currentRoom = room;
-  lobbyCode = room; // ✅ ADD THIS
-  document.getElementById("roomInfo").innerText =
-    "Joined room: " + room;
-});
 
 socket.on("errorMsg", (msg) => {
   alert(msg);
@@ -1064,32 +1058,6 @@ socket.on("errorMsg", (msg) => {
 
   document.getElementById("setupScreen").style.display = "none";
   document.getElementById("draftScreen").style.display = "block";
-
-  // ✅ SET NAMES FROM SERVER
-  document.getElementById("p1NameDisplay").textContent = state.player1.name;
-  document.getElementById("p2NameDisplay").textContent = state.player2.name;
-  document.getElementById("team1Header").textContent = state.player1.name + "'s Team";
-  document.getElementById("team2Header").textContent = state.player2.name + "'s Team";
-gameState.currentFilter = 'ALL';
-gameState.searchTerm = '';
-
-document.querySelectorAll('.filter-btn').forEach(btn =>
-  btn.classList.remove('active')
-);
-document.querySelector('.filter-btn').classList.add('active');
-
-  updateTurnIndicator();
-  renderPlayers();
-  updateTeamDisplay();
-});
-
-socket.on("draftUpdate", ({ state }) => {
-  gameState = state;
-  myTurn = false; // default off
-  updateTurnIndicator();
-  renderPlayers();
-  updateTeamDisplay();
-});
 
 
   // ✅ SET NAMES FROM SERVER
@@ -1277,34 +1245,45 @@ document.querySelector('.filter-btn').classList.add('active');
             document.getElementById('p2ForeignCount').textContent = '✈️ Overseas: ' + gameState.player2.foreignCount + '/4';
         }
 
-        function renderPlayers() {
-            const grid = document.getElementById('playerGrid');
-            grid.innerHTML = '';
+function renderPlayers() {
+  const grid = document.getElementById('playerGrid');
+  grid.innerHTML = '';
 
-            let filteredPlayers = players.filter(player => {
-                const matchesFilter = gameState.currentFilter === 'ALL' || player.category === gameState.currentFilter;
-                const matchesSearch = player.name.toLowerCase().includes(gameState.searchTerm.toLowerCase());
-                return matchesFilter && matchesSearch;
-            });
+  let filteredPlayers = players.filter(player => {
+    const matchesFilter =
+      gameState.currentFilter === 'ALL' ||
+      player.category === gameState.currentFilter;
 
-            filteredPlayers.forEach(player => {
-                const isPicked = gameState.pickedPlayers.includes(player.name);
-                const card = document.createElement('div');
-                card.className = 'player-card' + (isPicked ? ' picked' : '');
-                card.innerHTML = `
-                    <h4>${player.foreign ? '✈️ ' : ''}${player.name}</h4>
-                    <div class="role">${player.role}</div>
-                    <div class="team">${player.team}</div>
-                `;
-                
-                if (!isPicked) {
-  card.onclick = () => {
-    if (!myTurn) {
-      showWarning("⛔ Wait for your turn!");
-      return;
+    const matchesSearch =
+      player.name.toLowerCase().includes(gameState.searchTerm.toLowerCase());
+
+    return matchesFilter && matchesSearch;
+  });
+
+  filteredPlayers.forEach(player => {
+    const isPicked = gameState.pickedPlayers.includes(player.name);
+
+    const card = document.createElement('div');
+    card.className = 'player-card' + (isPicked ? ' picked' : '');
+
+    card.innerHTML = `
+      <h4>${player.foreign ? '✈️ ' : ''}${player.name}</h4>
+      <div class="role">${player.role}</div>
+      <div class="team">${player.team}</div>
+    `;
+
+    if (!isPicked) {
+      card.onclick = () => {
+        if (!myTurn) {
+          showWarning("⛔ Wait for your turn!");
+          return;
+        }
+        pickPlayer(player);
+      };
     }
-    pickPlayer(player);
-  };
+
+    grid.appendChild(card);
+  });
 }
 
 
