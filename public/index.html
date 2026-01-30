@@ -863,6 +863,16 @@
     </style>
 </head>
 <body>
+    <div id="multiplayer-panel" style="padding:15px; background:#111; color:#fff; text-align:center;">
+  <input id="mpPlayerName" placeholder="Your name" />
+  <br><br>
+  <button onclick="createRoom()">Create Room</button>
+  <br><br>
+  <input id="roomInput" placeholder="Room code" />
+  <button onclick="joinRoom()">Join Room</button>
+  <p id="roomInfo"></p>
+</div>
+
     <div class="container">
         <div class="header">
             <div class="cricket-ball">🏏</div>
@@ -990,9 +1000,48 @@
             <button class="btn reset-btn" onclick="resetDraft()">🔄 Start New Draft</button>
         </div>
     </div>
+<script src="/socket.io/socket.io.js"></script>
 
     <script>
         // IPL 2025 Complete Player Database
+        const socket = io();
+let currentRoom = null;
+
+function createRoom() {
+  const name = document.getElementById("mpPlayerName").value;
+  if (!name) {
+    alert("Enter your name");
+    return;
+  }
+  socket.emit("createRoom", name);
+}
+
+function joinRoom() {
+  const name = document.getElementById("mpPlayerName").value;
+  const room = document.getElementById("roomInput").value;
+  if (!name || !room) {
+    alert("Enter name and room code");
+    return;
+  }
+  socket.emit("joinRoom", { name, room });
+}
+
+socket.on("roomCreated", (room) => {
+  currentRoom = room;
+  document.getElementById("roomInfo").innerText =
+    "Room created: " + room + " (share this code)";
+});
+
+socket.on("joinedRoom", (room) => {
+  currentRoom = room;
+  document.getElementById("roomInfo").innerText =
+    "Joined room: " + room;
+});
+
+socket.on("errorMsg", (msg) => {
+  alert(msg);
+});
+
         const players = [
             // Chennai Super Kings
             { name: "Ruturaj Gaikwad", role: "Batsman", team: "CSK", category: "Batsman", foreign: false },
