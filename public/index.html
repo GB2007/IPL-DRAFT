@@ -1042,7 +1042,11 @@ socket.on("roomCreated", (room) => {
   document.getElementById("roomInfo").innerText =
     "Room created: " + room + " (share this code)";
 });
-
+socket.on("yourTurn", () => {
+  myTurn = true;
+  updateTurnIndicator();
+  renderPlayers();
+});
 
 socket.on("joinedRoom", (room) => {
   currentRoom = room;
@@ -1079,18 +1083,14 @@ document.querySelector('.filter-btn').classList.add('active');
   updateTeamDisplay();
 });
 
-socket.on("draftUpdate", ({ state, yourTurn }) => {
+socket.on("draftUpdate", ({ state }) => {
   gameState = state;
-  myTurn = yourTurn;
+  myTurn = false; // default off
+  updateTurnIndicator();
+  renderPlayers();
+  updateTeamDisplay();
+});
 
-  document.getElementById("setupScreen").style.display = "none";
-  document.getElementById("draftScreen").style.display = "block";
-const totalPicked =
-  state.player1.team.length + state.player2.team.length;
-
-if (totalPicked === 22) {
-  showResults();
-}
 
   // ✅ SET NAMES FROM SERVER
   document.getElementById("p1NameDisplay").textContent = state.player1.name;
