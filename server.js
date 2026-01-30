@@ -8,116 +8,131 @@ const io = new Server(server);
 
 app.use(express.static("public"));
 
+/* ===============================
+   IN-MEMORY LOBBIES
+================================ */
 const lobbies = {};
-const PICK_TIME = 30;
 
-function generateCode() {
-  return Math.random().toString(36).substring(2, 7).toUpperCase();
-}
-
+/* ===============================
+   SOCKET LOGIC
+================================ */
 io.on("connection", (socket) => {
-  console.log("Connected:", socket.id);
+  console.log("User connected:", socket.id);
 
-  // CREATE LOBBY
+  /* ---------- CREATE LOBBY ---------- */
   socket.on("createLobby", ({ teamName, players }) => {
-    const code = generateCode();
+    const code = Math.random().toString(36).substring(2, 7).toUpperCase();
 
     lobbies[code] = {
-      code,
-      teams: [{ id: socket.id, name: teamName, picks: [] }],
-      availablePlayers: [...players],
-      turnIndex: 0,
-      timer: PICK_TIME,
-      interval: null,
-      started: false
+      playersPool: players,
+      sockets: [socket.id],
+      state: {
+        player1: { name: teamName, team: [], foreignCount: 0 },
+        player2: { name: "", team: [], foreignCount: 0 },
+        pickedPlayers: [],
+        currentPlayer: 1
+      }
     };
 
     socket.join(code);
-    socket.emit("lobbyCreated", code);
+    socket.emit("roomCreated", code);
   });
 
-  // JOIN LOBBY
-  socket.on("joinLobby", ({ code, teamName }) => {
+  /* ---------- JOIN LOBBY ---------- */
+  socket.on("joinLobby", ({ teamName, code }) => {
     const lobby = lobbies[code];
+
     if (!lobby) {
-      socket.emit("errorMsg", "Lobby not found");
+      socket.emit("errorMsg", "Room does not exist");
       return;
     }
 
-    if (lobby.teams.length >= 2) {
-      socket.emit("errorMsg", "Lobby already full");
+    if (lobby.sockets.length >= 2) {
+      socket.emit("errorMsg", "Room is full");
       return;
     }
 
-    lobby.teams.push({ id: socket.id, name: teamName, picks: [] });
+    lobby.sockets.push(socket.id);
+    lobby.state.player2.name = teamName;
+
     socket.join(code);
+    socket.emit("joinedRoom", code);
 
-    lobby.started = true;
-    startDraft(lobby);
+    /* ---------- AUTO START DRAFT ---------- */
+    io.to(code).emit("draftStarted", {
+      state: lobby.state,
+      yourTurn: lobby.sockets[0] === socket.id ? false : true
+    });
+
+    // Tell first player it's their turn
+    io.to(lobby.sockets[0]).emit("draftUpdate", {
+      state: lobby.state,
+      yourTurn: true
+    });
   });
 
-  // PICK PLAYER
+  /* ---------- PICK PLAYER ---------- */
   socket.on("pickPlayer", ({ code, playerName }) => {
     const lobby = lobbies[code];
     if (!lobby) return;
 
-    const currentTeam = lobby.teams[lobby.turnIndex];
-    if (currentTeam.id !== socket.id) return;
+    const currentSocket =
+      lobby.state.currentPlayer === 1
+        ? lobby.sockets[0]
+        : lobby.sockets[1];
 
-    const player = lobby.availablePlayers.find(p => p.name === playerName);
+    // ❌ Not your turn
+    if (socket.id !== currentSocket) return;
+
+    // ❌ Already picked
+    if (lobby.state.pickedPlayers.includes(playerName)) return;
+
+    const player = lobby.playersPool.find(p => p.name === playerName);
     if (!player) return;
 
-    currentTeam.picks.push(player);
-    lobby.availablePlayers = lobby.availablePlayers.filter(
-      p => p.name !== playerName
-    );
+    const team =
+      lobby.state.currentPlayer === 1
+        ? lobby.state.player1
+        : lobby.state.player2;
 
-    lobby.turnIndex = (lobby.turnIndex + 1) % lobby.teams.length;
-    lobby.timer = PICK_TIME;
+    // Constraints
+    if (team.team.length >= 11) return;
+    if (player.foreign && team.foreignCount >= 4) return;
 
-    io.to(code).emit("stateUpdate", lobby);
+    // Add player
+    team.team.push(player);
+    lobby.state.pickedPlayers.push(player.name);
+    if (player.foreign) team.foreignCount++;
+
+    // Switch turn
+    lobby.state.currentPlayer =
+      lobby.state.currentPlayer === 1 ? 2 : 1;
+
+    // Sync both players
+    lobby.sockets.forEach((id, idx) => {
+      io.to(id).emit("draftUpdate", {
+        state: lobby.state,
+        yourTurn: lobby.state.currentPlayer === idx + 1
+      });
+    });
   });
 
+  /* ---------- DISCONNECT ---------- */
   socket.on("disconnect", () => {
-    console.log("Disconnected:", socket.id);
+    for (const code in lobbies) {
+      const lobby = lobbies[code];
+      if (lobby.sockets.includes(socket.id)) {
+        delete lobbies[code];
+        io.to(code).emit("errorMsg", "Opponent disconnected");
+      }
+    }
   });
 });
 
-function startDraft(lobby) {
-  io.to(lobby.code).emit("draftStarted", lobby);
-  startTimer(lobby);
-}
-
-function startTimer(lobby) {
-  clearInterval(lobby.interval);
-
-  lobby.interval = setInterval(() => {
-    lobby.timer--;
-    io.to(lobby.code).emit("timerUpdate", lobby.timer);
-
-    if (lobby.timer <= 0) {
-      autoPick(lobby);
-    }
-  }, 1000);
-}
-
-function autoPick(lobby) {
-  if (lobby.availablePlayers.length === 0) return;
-
-  const random =
-    lobby.availablePlayers[
-      Math.floor(Math.random() * lobby.availablePlayers.length)
-    ];
-
-  lobby.teams[lobby.turnIndex].picks.push(random);
-  lobby.availablePlayers = lobby.availablePlayers.filter(
-    p => p.name !== random.name
-  );
-
-  lobby.turnIndex = (lobby.turnIndex + 1) % lobby.teams.length;
-  lobby.timer = PICK_TIME;
-
-  io.to(lobby.code).emit("stateUpdate", lobby);
-}
-
-server.listen(process.env.PORT || 3000);
+/* ===============================
+   START SERVER
+================================ */
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, () =>
+  console.log("Server running on port", PORT)
+);
