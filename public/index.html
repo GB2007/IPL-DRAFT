@@ -891,7 +891,6 @@
                 <label>Player 2 Name</label>
                 <input type="text" id="player2Name" placeholder="Enter opponent's name">
             </div>
-            <button class="btn" onclick="startDraft()">🏏 Start Draft</button>
         </div>
 
         <!-- Draft Screen -->
@@ -1004,13 +1003,12 @@
 
     <script>
 
-        const socket = io();
+const socket = io();
 let lobbyCode = null;
 let myTurn = false;
+let currentRoom = null;
 
         // IPL 2025 Complete Player Database
-        const socket = io();
-let currentRoom = null;
 
 function createRoom() {
   const teamName = document.getElementById("mpPlayerName").value;
@@ -1047,6 +1045,27 @@ socket.on("joinedRoom", (room) => {
 socket.on("errorMsg", (msg) => {
   alert(msg);
 });
+        socket.on("draftStarted", ({ state, yourTurn }) => {
+  gameState = state;
+  myTurn = yourTurn;
+
+  document.getElementById("setupScreen").style.display = "none";
+  document.getElementById("draftScreen").style.display = "block";
+
+  updateTurnIndicator();
+  renderPlayers();
+  updateTeamDisplay();
+});
+
+socket.on("draftUpdate", ({ state, yourTurn }) => {
+  gameState = state;
+  myTurn = yourTurn;
+
+  updateTurnIndicator();
+  renderPlayers();
+  updateTeamDisplay();
+});
+
 
         const players = [
             // Chennai Super Kings
@@ -1200,14 +1219,6 @@ socket.on("errorMsg", (msg) => {
         let draggedIndex = null;
         let draggedTeam = null;
 
-        function startDraft() {
-            const p1 = document.getElementById('player1Name').value.trim();
-            const p2 = document.getElementById('player2Name').value.trim();
-
-            if (!p1 || !p2) {
-                alert('Please enter both player names!');
-                return;
-            }
 
             gameState.player1.name = p1;
             gameState.player2.name = p2;
@@ -1279,26 +1290,6 @@ function pickPlayer(player) {
     playerName: player.name
   });
 }
-
-
-            currentTeam.team.push(player);
-            gameState.pickedPlayers.push(player.name);
-            
-            if (player.foreign) {
-                currentTeam.foreignCount++;
-            }
-
-            updateTeamDisplay();
-            
-            if (gameState.player1.team.length === 11 && gameState.player2.team.length === 11) {
-                showResults();
-                return;
-            }
-
-            gameState.currentPlayer = gameState.currentPlayer === 1 ? 2 : 1;
-            updateTurnIndicator();
-            renderPlayers();
-        }
 
         function updateTeamDisplay() {
             updateSingleTeamDisplay('team1List', gameState.player1, 1);
