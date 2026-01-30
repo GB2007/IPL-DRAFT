@@ -1064,12 +1064,7 @@ socket.on("errorMsg", (msg) => {
 });
 socket.on("draftUpdate", ({ state }) => {
   gameState = state;
-
-  // 🔥 TURN DECIDED PURELY BY SERVER STATE
-  const mySocketId = socket.id;
-  myTurn =
-    (state.currentPlayer === 1 && mySocketId === state.player1Socket) ||
-    (state.currentPlayer === 2 && mySocketId === state.player2Socket);
+  myTurn = false;
 
   updateTurnIndicator();
   renderPlayers();
@@ -1296,12 +1291,8 @@ function renderPlayers() {
         }
 
 function pickPlayer(player) {
-  if (!myTurn) return;
-
-  socket.emit("pickPlayer", {
-    code: lobbyCode,
-    playerName: player.name
-  });
+if (!myTurn) return;
+socket.emit("pickPlayer", ...)
 }
 
         function updateTeamDisplay() {
