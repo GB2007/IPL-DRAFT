@@ -1045,25 +1045,44 @@ socket.on("joinedRoom", (room) => {
 socket.on("errorMsg", (msg) => {
   alert(msg);
 });
-        socket.on("draftStarted", ({ state, yourTurn }) => {
+  socket.on("draftStarted", ({ state, yourTurn }) => {
   gameState = state;
   myTurn = yourTurn;
 
   document.getElementById("setupScreen").style.display = "none";
   document.getElementById("draftScreen").style.display = "block";
 
+  // ✅ SET NAMES FROM SERVER
+  document.getElementById("p1NameDisplay").textContent = state.player1.name;
+  document.getElementById("p2NameDisplay").textContent = state.player2.name;
+  document.getElementById("team1Header").textContent = state.player1.name + "'s Team";
+  document.getElementById("team2Header").textContent = state.player2.name + "'s Team";
+
   updateTurnIndicator();
   renderPlayers();
   updateTeamDisplay();
+});
+
 });
 
 socket.on("draftUpdate", ({ state, yourTurn }) => {
   gameState = state;
   myTurn = yourTurn;
 
+  document.getElementById("setupScreen").style.display = "none";
+  document.getElementById("draftScreen").style.display = "block";
+
+  // ✅ SET NAMES FROM SERVER
+  document.getElementById("p1NameDisplay").textContent = state.player1.name;
+  document.getElementById("p2NameDisplay").textContent = state.player2.name;
+  document.getElementById("team1Header").textContent = state.player1.name + "'s Team";
+  document.getElementById("team2Header").textContent = state.player2.name + "'s Team";
+
   updateTurnIndicator();
   renderPlayers();
   updateTeamDisplay();
+});
+
 });
 
 
@@ -1220,20 +1239,7 @@ socket.on("draftUpdate", ({ state, yourTurn }) => {
         let draggedTeam = null;
 
 
-            gameState.player1.name = p1;
-            gameState.player2.name = p2;
-
-            document.getElementById('setupScreen').style.display = 'none';
-            document.getElementById('draftScreen').style.display = 'block';
-
-            document.getElementById('p1NameDisplay').textContent = p1;
-            document.getElementById('p2NameDisplay').textContent = p2;
-            document.getElementById('team1Header').textContent = p1 + "'s Team";
-            document.getElementById('team2Header').textContent = p2 + "'s Team";
-
-            updateTurnIndicator();
-            renderPlayers();
-        }
+           
 
         function updateTurnIndicator() {
             const currentName = gameState.currentPlayer === 1 ? gameState.player1.name : gameState.player2.name;
