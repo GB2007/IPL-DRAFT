@@ -1,0 +1,1473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IPL Draft Arena - Build Your Dream XI</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0a3d1f 0%, #1a5c33 25%, #0f4d28 50%, #1a5c33 75%, #0a3d1f 100%);
+            background-attachment: fixed;
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Animated cricket field pattern */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                radial-gradient(circle at 50% 50%, rgba(255,215,0,0.05) 0%, transparent 50%),
+                repeating-linear-gradient(0deg, transparent, transparent 60px, rgba(255,255,255,0.02) 60px, rgba(255,255,255,0.02) 120px),
+                repeating-linear-gradient(90deg, transparent, transparent 60px, rgba(255,255,255,0.02) 60px, rgba(255,255,255,0.02) 120px);
+            pointer-events: none;
+            z-index: 0;
+            animation: fieldGlow 10s ease-in-out infinite;
+        }
+
+        @keyframes fieldGlow {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
+        }
+
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+            padding: 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Enhanced Header */
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+            background: linear-gradient(135deg, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.4) 100%);
+            padding: 35px;
+            border-radius: 25px;
+            border: 4px solid #ffd700;
+            box-shadow: 
+                0 0 40px rgba(255, 215, 0, 0.4),
+                inset 0 0 20px rgba(255, 215, 0, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(255,215,0,0.1), transparent);
+            animation: headerShine 3s linear infinite;
+        }
+
+        @keyframes headerShine {
+            0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+            100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+        }
+
+        .header h1 {
+            font-size: 3.5em;
+            margin-bottom: 10px;
+            text-shadow: 
+                3px 3px 6px rgba(0,0,0,0.8),
+                0 0 30px rgba(255,215,0,0.5);
+            background: linear-gradient(45deg, #ffd700, #ffed4e, #ffd700, #ffed4e);
+            background-size: 200% 200%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: gradientShift 3s ease infinite;
+            position: relative;
+            z-index: 1;
+        }
+
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        .header .cricket-ball {
+            font-size: 3.5em;
+            animation: spin 4s linear infinite;
+            display: inline-block;
+            filter: drop-shadow(0 0 10px rgba(255,215,0,0.5));
+        }
+
+        @keyframes spin {
+            100% { transform: rotate(360deg); }
+        }
+
+        .header p {
+            font-size: 1.4em;
+            color: #ffd700;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Setup Screen */
+        .setup-screen {
+            background: linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(240,240,240,0.95) 100%);
+            border-radius: 25px;
+            padding: 60px;
+            max-width: 650px;
+            margin: 0 auto;
+            box-shadow: 
+                0 20px 60px rgba(0,0,0,0.6),
+                0 0 40px rgba(255,215,0,0.2);
+            border: 5px solid #ffd700;
+        }
+
+        .setup-screen h2 {
+            color: #0a3d1f;
+            margin-bottom: 35px;
+            text-align: center;
+            font-size: 2.3em;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .form-group {
+            margin-bottom: 30px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 12px;
+            color: #0a3d1f;
+            font-weight: 700;
+            font-size: 1.2em;
+            text-transform: uppercase;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 18px;
+            border: 3px solid #0a3d1f;
+            border-radius: 12px;
+            font-size: 18px;
+            transition: all 0.3s;
+            background: white;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #ffd700;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+            transform: scale(1.02);
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #0a3d1f 0%, #1a5c33 100%);
+            color: #ffd700;
+            border: 4px solid #ffd700;
+            padding: 20px 45px;
+            border-radius: 12px;
+            font-size: 22px;
+            font-weight: 700;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+        }
+
+        .btn:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 35px rgba(255, 215, 0, 0.5);
+            background: linear-gradient(135deg, #1a5c33 0%, #0a3d1f 100%);
+        }
+
+        /* Draft Screen */
+        .draft-screen {
+            display: none;
+        }
+
+        .draft-header {
+            background: linear-gradient(135deg, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.5) 100%);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 25px;
+            border: 4px solid #ffd700;
+            box-shadow: 
+                0 8px 30px rgba(0,0,0,0.6),
+                inset 0 0 20px rgba(255,215,0,0.1);
+        }
+
+        .turn-indicator {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .turn-indicator h2 {
+            color: #ffd700;
+            font-size: 2.2em;
+            margin-bottom: 15px;
+            text-shadow: 
+                2px 2px 4px rgba(0,0,0,0.8),
+                0 0 20px rgba(255,215,0,0.5);
+        }
+
+        .current-turn {
+            background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+            color: #0a3d1f;
+            padding: 18px 35px;
+            border-radius: 35px;
+            display: inline-block;
+            font-size: 1.4em;
+            font-weight: 700;
+            box-shadow: 
+                0 8px 20px rgba(255, 215, 0, 0.6),
+                inset 0 2px 10px rgba(255,255,255,0.5);
+            animation: pulse 2s infinite;
+            letter-spacing: 1px;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.08); }
+        }
+
+        .draft-progress {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-top: 25px;
+        }
+
+        .player-count {
+            background: rgba(255, 255, 255, 0.12);
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            border: 3px solid #ffd700;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .player-count .name {
+            font-weight: 700;
+            color: #ffd700;
+            margin-bottom: 12px;
+            font-size: 1.3em;
+            text-shadow: 0 0 10px rgba(255,215,0,0.5);
+        }
+
+        .player-count .count {
+            font-size: 2.8em;
+            color: white;
+            font-weight: bold;
+            text-shadow: 0 0 15px rgba(255,215,0,0.3);
+        }
+
+        .foreign-count {
+            font-size: 1em;
+            color: #ffed4e;
+            margin-top: 8px;
+            font-weight: 600;
+        }
+
+        /* Draft Layout */
+        .draft-layout {
+            display: grid;
+            grid-template-columns: 380px 1fr 380px;
+            gap: 25px;
+        }
+
+        /* Team Panels with Drag & Drop */
+        .team-panel {
+            background: linear-gradient(135deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.6) 100%);
+            border-radius: 20px;
+            padding: 25px;
+            border: 4px solid #ffd700;
+            box-shadow: 
+                0 8px 30px rgba(0,0,0,0.6),
+                inset 0 0 20px rgba(255,215,0,0.1);
+            height: fit-content;
+        }
+
+        .team-panel h3 {
+            color: #ffd700;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            text-align: center;
+            border-bottom: 3px solid #ffd700;
+            padding-bottom: 15px;
+            text-shadow: 0 0 10px rgba(255,215,0,0.5);
+        }
+
+        .team-list {
+            list-style: none;
+            min-height: 100px;
+        }
+
+        .team-list li {
+            background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.08) 100%);
+            padding: 15px;
+            margin-bottom: 12px;
+            border-radius: 10px;
+            border-left: 5px solid #ffd700;
+            transition: all 0.3s;
+            cursor: move;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.3);
+        }
+
+        .team-list li:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateX(8px);
+            box-shadow: 0 5px 15px rgba(255,215,0,0.3);
+        }
+
+        .team-list li.dragging {
+            opacity: 0.5;
+            transform: scale(0.95);
+        }
+
+        .team-list li.drag-over {
+            border-top: 3px solid #ffd700;
+            margin-top: 20px;
+        }
+
+        .player-position {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .position-number {
+            background: #ffd700;
+            color: #0a3d1f;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            font-size: 1.1em;
+            box-shadow: 0 3px 10px rgba(255,215,0,0.5);
+        }
+
+        .player-info-drag {
+            flex: 1;
+        }
+
+        .team-list .player-name {
+            font-weight: 700;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 1.05em;
+        }
+
+        .team-list .player-role {
+            font-size: 0.85em;
+            color: #ffd700;
+            margin-top: 5px;
+        }
+
+        .foreign-icon {
+            color: #00bfff;
+            font-size: 1.3em;
+            filter: drop-shadow(0 0 5px rgba(0,191,255,0.5));
+        }
+
+        .drag-hint {
+            text-align: center;
+            color: #ffd700;
+            font-size: 0.9em;
+            margin-top: 15px;
+            opacity: 0.8;
+            font-style: italic;
+        }
+
+        /* Player Selection */
+        .player-selection {
+            background: linear-gradient(135deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.6) 100%);
+            border-radius: 20px;
+            padding: 30px;
+            border: 4px solid #ffd700;
+            box-shadow: 
+                0 8px 30px rgba(0,0,0,0.6),
+                inset 0 0 20px rgba(255,215,0,0.1);
+        }
+
+        .player-selection h3 {
+            color: #ffd700;
+            margin-bottom: 25px;
+            font-size: 1.8em;
+            text-align: center;
+            text-shadow: 0 0 15px rgba(255,215,0,0.5);
+        }
+
+        .search-filter {
+            margin-bottom: 25px;
+        }
+
+        .search-filter input {
+            width: 100%;
+            padding: 15px;
+            border: 3px solid #ffd700;
+            border-radius: 12px;
+            font-size: 17px;
+            margin-bottom: 18px;
+            background: rgba(255, 255, 255, 0.95);
+            transition: all 0.3s;
+        }
+
+        .search-filter input:focus {
+            outline: none;
+            box-shadow: 0 0 20px rgba(255,215,0,0.5);
+            transform: scale(1.02);
+        }
+
+        .filter-buttons {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .filter-btn {
+            padding: 12px 22px;
+            border: 3px solid #ffd700;
+            background: rgba(255, 255, 255, 0.12);
+            color: white;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 700;
+            transition: all 0.3s;
+            font-size: 0.95em;
+        }
+
+        .filter-btn.active {
+            background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+            color: #0a3d1f;
+            transform: scale(1.15);
+            box-shadow: 0 5px 20px rgba(255,215,0,0.5);
+        }
+
+        .filter-btn:hover {
+            background: rgba(255, 215, 0, 0.3);
+            transform: scale(1.05);
+        }
+
+        .player-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 18px;
+            max-height: 650px;
+            overflow-y: auto;
+            padding: 12px;
+        }
+
+        .player-grid::-webkit-scrollbar {
+            width: 12px;
+        }
+
+        .player-grid::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+
+        .player-grid::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(255,215,0,0.5);
+        }
+
+        .player-card {
+            background: linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(245,245,245,0.95) 100%);
+            border-radius: 15px;
+            padding: 18px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 3px solid transparent;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.4);
+        }
+
+        .player-card:hover {
+            transform: translateY(-10px) scale(1.08);
+            box-shadow: 
+                0 15px 35px rgba(255, 215, 0, 0.7),
+                0 0 20px rgba(255,215,0,0.5);
+            border-color: #ffd700;
+        }
+
+        .player-card.picked {
+            opacity: 0.25;
+            cursor: not-allowed;
+            background: rgba(100, 100, 100, 0.5);
+        }
+
+        .player-card.picked:hover {
+            transform: none;
+        }
+
+        .player-card h4 {
+            color: #0a3d1f;
+            margin-bottom: 10px;
+            font-size: 1.15em;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: 700;
+        }
+
+        .player-card .role {
+            color: #1a5c33;
+            font-weight: 700;
+            font-size: 0.95em;
+            margin-bottom: 6px;
+        }
+
+        .player-card .team {
+            color: #666;
+            font-size: 0.88em;
+            font-weight: 600;
+        }
+
+        /* Results Screen */
+        .results-screen {
+            display: none;
+            position: relative;
+        }
+
+        .confetti {
+            position: fixed;
+            width: 12px;
+            height: 12px;
+            background: #ffd700;
+            position: absolute;
+            animation: confetti-fall 3s linear forwards;
+            z-index: 1000;
+        }
+
+        @keyframes confetti-fall {
+            to {
+                transform: translateY(100vh) rotate(720deg);
+                opacity: 0;
+            }
+        }
+
+        .results-header {
+            background: linear-gradient(135deg, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.7) 100%);
+            border-radius: 25px;
+            padding: 50px;
+            margin-bottom: 35px;
+            text-align: center;
+            border: 5px solid #ffd700;
+            box-shadow: 
+                0 15px 50px rgba(255, 215, 0, 0.6),
+                inset 0 0 30px rgba(255,215,0,0.1);
+        }
+
+        .results-header h2 {
+            color: #ffd700;
+            font-size: 3.5em;
+            margin-bottom: 20px;
+            text-shadow: 
+                3px 3px 6px rgba(0,0,0,0.8),
+                0 0 30px rgba(255,215,0,0.7);
+            animation: titleGlow 2s ease-in-out infinite;
+        }
+
+        @keyframes titleGlow {
+            0%, 100% { text-shadow: 3px 3px 6px rgba(0,0,0,0.8), 0 0 30px rgba(255,215,0,0.7); }
+            50% { text-shadow: 3px 3px 6px rgba(0,0,0,0.8), 0 0 50px rgba(255,215,0,1); }
+        }
+
+        .results-header p {
+            color: white;
+            font-size: 1.4em;
+        }
+
+        /* Leadership Selection */
+        .leadership-selection {
+            background: linear-gradient(135deg, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.7) 100%);
+            border-radius: 25px;
+            padding: 35px;
+            margin-bottom: 35px;
+            border: 4px solid #ffd700;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+        }
+
+        .leadership-selection h3 {
+            color: #ffd700;
+            font-size: 2em;
+            margin-bottom: 25px;
+            text-align: center;
+            text-shadow: 0 0 20px rgba(255,215,0,0.5);
+        }
+
+        .leadership-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 35px;
+        }
+
+        .leadership-team {
+            background: rgba(255, 255, 255, 0.12);
+            padding: 25px;
+            border-radius: 18px;
+            border: 3px solid #ffd700;
+        }
+
+        .leadership-team h4 {
+            color: #ffd700;
+            font-size: 1.5em;
+            margin-bottom: 20px;
+            text-align: center;
+            text-shadow: 0 0 10px rgba(255,215,0,0.5);
+        }
+
+        .leadership-option {
+            margin-bottom: 18px;
+        }
+
+        .leadership-option label {
+            color: white;
+            font-weight: 700;
+            display: block;
+            margin-bottom: 10px;
+            font-size: 1.05em;
+        }
+
+        .leadership-option select {
+            width: 100%;
+            padding: 12px;
+            border: 3px solid #ffd700;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.95);
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .confirm-leadership {
+            background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+            color: #0a3d1f;
+            margin-top: 25px;
+            border: 3px solid #ffd700;
+        }
+
+        /* Final Teams - Full Batting Order */
+        .teams-comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 35px;
+        }
+
+        .final-team {
+            background: linear-gradient(135deg, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.7) 100%);
+            border-radius: 25px;
+            padding: 35px;
+            border: 5px solid #ffd700;
+            box-shadow: 
+                0 15px 40px rgba(0,0,0,0.7),
+                inset 0 0 30px rgba(255,215,0,0.1);
+        }
+
+        .final-team h3 {
+            color: #ffd700;
+            font-size: 2.5em;
+            margin-bottom: 30px;
+            text-align: center;
+            border-bottom: 4px solid #ffd700;
+            padding-bottom: 20px;
+            text-shadow: 0 0 20px rgba(255,215,0,0.6);
+        }
+
+        .batting-order-title {
+            color: #ffed4e;
+            font-size: 1.3em;
+            margin-bottom: 20px;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .batting-order-list {
+            list-style: none;
+        }
+
+        .batting-order-list li {
+            background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.08) 100%);
+            padding: 18px 20px;
+            margin-bottom: 12px;
+            border-radius: 12px;
+            border-left: 6px solid #ffd700;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+        }
+
+        .batting-order-list li:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateX(10px);
+            box-shadow: 0 6px 20px rgba(255,215,0,0.4);
+        }
+
+        .batting-position-number {
+            background: #ffd700;
+            color: #0a3d1f;
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            font-size: 1.3em;
+            box-shadow: 0 4px 15px rgba(255,215,0,0.6);
+            flex-shrink: 0;
+        }
+
+        .batting-player-details {
+            flex: 1;
+        }
+
+        .batting-player-name {
+            font-weight: 700;
+            color: white;
+            font-size: 1.2em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 6px;
+        }
+
+        .batting-player-info {
+            color: #ffd700;
+            font-size: 0.9em;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .leadership-badge {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 0.75em;
+            font-weight: 700;
+            box-shadow: 0 2px 8px rgba(255,107,107,0.5);
+        }
+
+        .leadership-badge.captain {
+            background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+            color: #0a3d1f;
+        }
+
+        .leadership-badge.vc {
+            background: linear-gradient(135deg, #c0c0c0 0%, #e8e8e8 100%);
+            color: #0a3d1f;
+        }
+
+        .leadership-badge.wk {
+            background: linear-gradient(135deg, #4ecdc4 0%, #44a5a5 100%);
+        }
+
+        .reset-btn {
+            background: linear-gradient(135deg, #d32f2f 0%, #b71c1c 100%);
+            border-color: #ffd700;
+            margin-top: 35px;
+        }
+
+        .reset-btn:hover {
+            background: linear-gradient(135deg, #b71c1c 0%, #d32f2f 100%);
+        }
+
+        @media (max-width: 1600px) {
+            .draft-layout {
+                grid-template-columns: 320px 1fr 320px;
+            }
+
+            .player-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 1200px) {
+            .draft-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .teams-comparison {
+                grid-template-columns: 1fr;
+            }
+
+            .leadership-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .player-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2.2em;
+            }
+
+            .player-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .draft-progress {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .warning-message {
+            background: linear-gradient(135deg, #ff5252 0%, #f44336 100%);
+            color: white;
+            padding: 18px;
+            border-radius: 12px;
+            margin: 18px 0;
+            text-align: center;
+            font-weight: 700;
+            display: none;
+            animation: shake 0.5s;
+            box-shadow: 0 5px 20px rgba(255,82,82,0.5);
+            border: 2px solid rgba(255,255,255,0.3);
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-12px); }
+            75% { transform: translateX(12px); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="cricket-ball">🏏</div>
+            <h1>IPL DRAFT ARENA</h1>
+            <p>Build Your Dream XI - Every Pick Matters!</p>
+        </div>
+
+        <!-- Setup Screen -->
+        <div class="setup-screen" id="setupScreen">
+            <h2>🏆 Start Your Draft Battle</h2>
+            <div class="form-group">
+                <label>Player 1 Name</label>
+                <input type="text" id="player1Name" placeholder="Enter your name">
+            </div>
+            <div class="form-group">
+                <label>Player 2 Name</label>
+                <input type="text" id="player2Name" placeholder="Enter opponent's name">
+            </div>
+            <button class="btn" onclick="startDraft()">🏏 Start Draft</button>
+        </div>
+
+        <!-- Draft Screen -->
+        <div class="draft-screen" id="draftScreen">
+            <div class="draft-header">
+                <div class="turn-indicator">
+                    <h2>🏏 DRAFT IN PROGRESS 🏏</h2>
+                    <div class="current-turn" id="currentTurn"></div>
+                </div>
+                <div class="draft-progress">
+                    <div class="player-count">
+                        <div class="name" id="p1NameDisplay"></div>
+                        <div class="count" id="p1Count">0/11</div>
+                        <div class="foreign-count" id="p1ForeignCount">Overseas: 0/4</div>
+                    </div>
+                    <div class="player-count">
+                        <div class="name" id="p2NameDisplay"></div>
+                        <div class="count" id="p2Count">0/11</div>
+                        <div class="foreign-count" id="p2ForeignCount">Overseas: 0/4</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="draft-layout">
+                <div class="team-panel">
+                    <h3 id="team1Header">Team 1</h3>
+                    <ul class="team-list" id="team1List"></ul>
+                    <div class="drag-hint">💡 Drag to reorder batting lineup</div>
+                </div>
+
+                <div class="player-selection">
+                    <h3>🎯 AVAILABLE PLAYERS</h3>
+                    <div class="warning-message" id="warningMessage"></div>
+                    <div class="search-filter">
+                        <input type="text" id="searchPlayer" placeholder="🔍 Search players..." onkeyup="filterPlayers()">
+                        <div class="filter-buttons">
+                            <button class="filter-btn active" onclick="filterByRole('ALL')">All Players</button>
+                            <button class="filter-btn" onclick="filterByRole('Batsman')">🏏 Batsmen</button>
+                            <button class="filter-btn" onclick="filterByRole('Bowler')">⚡ Bowlers</button>
+                            <button class="filter-btn" onclick="filterByRole('All-Rounder')">🌟 All-Rounders</button>
+                            <button class="filter-btn" onclick="filterByRole('Wicket-Keeper')">🧤 Wicket-Keepers</button>
+                        </div>
+                    </div>
+                    <div class="player-grid" id="playerGrid"></div>
+                </div>
+
+                <div class="team-panel">
+                    <h3 id="team2Header">Team 2</h3>
+                    <ul class="team-list" id="team2List"></ul>
+                    <div class="drag-hint">💡 Drag to reorder batting lineup</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Screen -->
+        <div class="results-screen" id="resultsScreen">
+            <div id="confettiContainer"></div>
+            
+            <div class="results-header">
+                <h2>🏆 DRAFT COMPLETE! 🏆</h2>
+                <p>Now select your Captain, Vice-Captain & Wicket-Keeper</p>
+            </div>
+
+            <div class="leadership-selection" id="leadershipSelection">
+                <h3>👑 SELECT TEAM LEADERSHIP 👑</h3>
+                <div class="leadership-grid">
+                    <div class="leadership-team">
+                        <h4 id="leaderTeam1Name">Team 1</h4>
+                        <div class="leadership-option">
+                            <label>Captain (C)</label>
+                            <select id="captain1"></select>
+                        </div>
+                        <div class="leadership-option">
+                            <label>Vice-Captain (VC)</label>
+                            <select id="viceCaptain1"></select>
+                        </div>
+                        <div class="leadership-option">
+                            <label>Wicket-Keeper (WK)</label>
+                            <select id="keeper1"></select>
+                        </div>
+                    </div>
+                    <div class="leadership-team">
+                        <h4 id="leaderTeam2Name">Team 2</h4>
+                        <div class="leadership-option">
+                            <label>Captain (C)</label>
+                            <select id="captain2"></select>
+                        </div>
+                        <div class="leadership-option">
+                            <label>Vice-Captain (VC)</label>
+                            <select id="viceCaptain2"></select>
+                        </div>
+                        <div class="leadership-option">
+                            <label>Wicket-Keeper (WK)</label>
+                            <select id="keeper2"></select>
+                        </div>
+                    </div>
+                </div>
+                <button class="btn confirm-leadership" onclick="confirmLeadership()">✅ Confirm & Show Final Teams</button>
+            </div>
+
+            <div class="teams-comparison" id="teamsComparison" style="display: none;">
+                <div class="final-team" id="finalTeam1"></div>
+                <div class="final-team" id="finalTeam2"></div>
+            </div>
+
+            <button class="btn reset-btn" onclick="resetDraft()">🔄 Start New Draft</button>
+        </div>
+    </div>
+
+    <script>
+        // IPL 2025 Complete Player Database
+        const players = [
+            // Chennai Super Kings
+            { name: "Ruturaj Gaikwad", role: "Batsman", team: "CSK", category: "Batsman", foreign: false },
+            { name: "Devon Conway", role: "Batsman", team: "CSK", category: "Batsman", foreign: true },
+            { name: "Rahul Tripathi", role: "Batsman", team: "CSK", category: "Batsman", foreign: false },
+            { name: "Shaik Rasheed", role: "Batsman", team: "CSK", category: "Batsman", foreign: false },
+            { name: "Ayush Mhatre", role: "Batsman", team: "CSK", category: "Batsman", foreign: false },
+            { name: "Ravindra Jadeja", role: "All-Rounder", team: "CSK", category: "All-Rounder", foreign: false },
+            { name: "Shivam Dube", role: "All-Rounder", team: "CSK", category: "All-Rounder", foreign: false },
+            { name: "Ravichandran Ashwin", role: "All-Rounder", team: "CSK", category: "All-Rounder", foreign: false },
+            { name: "Sam Curran", role: "All-Rounder", team: "CSK", category: "All-Rounder", foreign: true },
+            { name: "Rachin Ravindra", role: "All-Rounder", team: "CSK", category: "All-Rounder", foreign: true },
+            { name: "Vijay Shankar", role: "All-Rounder", team: "CSK", category: "All-Rounder", foreign: false },
+            { name: "Deepak Hooda", role: "All-Rounder", team: "CSK", category: "All-Rounder", foreign: false },
+            { name: "Jamie Overton", role: "All-Rounder", team: "CSK", category: "All-Rounder", foreign: true },
+            { name: "MS Dhoni", role: "Wicket-Keeper", team: "CSK", category: "Wicket-Keeper", foreign: false },
+            { name: "Matheesha Pathirana", role: "Bowler", team: "CSK", category: "Bowler", foreign: true },
+            { name: "Khaleel Ahmed", role: "Bowler", team: "CSK", category: "Bowler", foreign: false },
+            { name: "Noor Ahmad", role: "Bowler", team: "CSK", category: "Bowler", foreign: true },
+            { name: "Anshul Kamboj", role: "Bowler", team: "CSK", category: "Bowler", foreign: false },
+            { name: "Mukesh Choudhary", role: "Bowler", team: "CSK", category: "Bowler", foreign: false },
+
+            // Mumbai Indians
+            { name: "Rohit Sharma", role: "Batsman", team: "MI", category: "Batsman", foreign: false },
+            { name: "Suryakumar Yadav", role: "Batsman", team: "MI", category: "Batsman", foreign: false },
+            { name: "Tilak Varma", role: "Batsman", team: "MI", category: "Batsman", foreign: false },
+            { name: "Hardik Pandya", role: "All-Rounder", team: "MI", category: "All-Rounder", foreign: false },
+            { name: "Naman Dhir", role: "All-Rounder", team: "MI", category: "All-Rounder", foreign: false },
+            { name: "Will Jacks", role: "All-Rounder", team: "MI", category: "All-Rounder", foreign: true },
+            { name: "Mitchell Santner", role: "All-Rounder", team: "MI", category: "All-Rounder", foreign: true },
+            { name: "Ryan Rickelton", role: "Wicket-Keeper", team: "MI", category: "Wicket-Keeper", foreign: true },
+            { name: "Jasprit Bumrah", role: "Bowler", team: "MI", category: "Bowler", foreign: false },
+            { name: "Trent Boult", role: "Bowler", team: "MI", category: "Bowler", foreign: true },
+            { name: "Allah Ghazanfar", role: "Bowler", team: "MI", category: "Bowler", foreign: true },
+            { name: "Karn Sharma", role: "Bowler", team: "MI", category: "Bowler", foreign: false },
+            { name: "Deepak Chahar", role: "Bowler", team: "MI", category: "Bowler", foreign: false },
+
+            // Kolkata Knight Riders
+            { name: "Ajinkya Rahane", role: "Batsman", team: "KKR", category: "Batsman", foreign: false },
+            { name: "Quinton de Kock", role: "Batsman", team: "KKR", category: "Batsman", foreign: true },
+            { name: "Rahmanullah Gurbaz", role: "Batsman", team: "KKR", category: "Batsman", foreign: true },
+            { name: "Angkrish Raghuvanshi", role: "Batsman", team: "KKR", category: "Batsman", foreign: false },
+            { name: "Rinku Singh", role: "Batsman", team: "KKR", category: "Batsman", foreign: false },
+            { name: "Manish Pandey", role: "Batsman", team: "KKR", category: "Batsman", foreign: false },
+            { name: "Andre Russell", role: "All-Rounder", team: "KKR", category: "All-Rounder", foreign: true },
+            { name: "Moeen Ali", role: "All-Rounder", team: "KKR", category: "All-Rounder", foreign: true },
+            { name: "Venkatesh Iyer", role: "All-Rounder", team: "KKR", category: "All-Rounder", foreign: false },
+            { name: "Sunil Narine", role: "All-Rounder", team: "KKR", category: "All-Rounder", foreign: true },
+            { name: "Anrich Nortje", role: "Bowler", team: "KKR", category: "Bowler", foreign: true },
+            { name: "Varun Chakaravarthy", role: "Bowler", team: "KKR", category: "Bowler", foreign: false },
+            { name: "Harshit Rana", role: "Bowler", team: "KKR", category: "Bowler", foreign: false },
+
+            // Royal Challengers Bangalore
+            { name: "Virat Kohli", role: "Batsman", team: "RCB", category: "Batsman", foreign: false },
+            { name: "Rajat Patidar", role: "Batsman", team: "RCB", category: "Batsman", foreign: false },
+            { name: "Tim David", role: "Batsman", team: "RCB", category: "Batsman", foreign: true },
+            { name: "Devdutt Padikkal", role: "Batsman", team: "RCB", category: "Batsman", foreign: false },
+            { name: "Dinesh Karthik", role: "Wicket-Keeper", team: "RCB", category: "Wicket-Keeper", foreign: false },
+            { name: "Liam Livingstone", role: "All-Rounder", team: "RCB", category: "All-Rounder", foreign: true },
+            { name: "Krunal Pandya", role: "All-Rounder", team: "RCB", category: "All-Rounder", foreign: false },
+            { name: "Jacob Bethell", role: "All-Rounder", team: "RCB", category: "All-Rounder", foreign: true },
+            { name: "Josh Hazlewood", role: "Bowler", team: "RCB", category: "Bowler", foreign: true },
+            { name: "Bhuvneshwar Kumar", role: "Bowler", team: "RCB", category: "Bowler", foreign: false },
+            { name: "Yash Dayal", role: "Bowler", team: "RCB", category: "Bowler", foreign: false },
+            { name: "Lungi Ngidi", role: "Bowler", team: "RCB", category: "Bowler", foreign: true },
+
+            // Delhi Capitals
+            { name: "Axar Patel", role: "All-Rounder", team: "DC", category: "All-Rounder", foreign: false },
+            { name: "Kuldeep Yadav", role: "Bowler", team: "DC", category: "Bowler", foreign: false },
+            { name: "Tristan Stubbs", role: "Batsman", team: "DC", category: "Batsman", foreign: true },
+            { name: "KL Rahul", role: "Batsman", team: "DC", category: "Batsman", foreign: false },
+            { name: "Jake Fraser-McGurk", role: "Batsman", team: "DC", category: "Batsman", foreign: true },
+            { name: "Faf du Plessis", role: "Batsman", team: "DC", category: "Batsman", foreign: true },
+            { name: "Karun Nair", role: "Batsman", team: "DC", category: "Batsman", foreign: false },
+            { name: "Abishek Porel", role: "Wicket-Keeper", team: "DC", category: "Wicket-Keeper", foreign: false },
+            { name: "Mitchell Starc", role: "Bowler", team: "DC", category: "Bowler", foreign: true },
+            { name: "T Natarajan", role: "Bowler", team: "DC", category: "Bowler", foreign: false },
+            { name: "Mukesh Kumar", role: "Bowler", team: "DC", category: "Bowler", foreign: false },
+            { name: "Mohit Sharma", role: "Bowler", team: "DC", category: "Bowler", foreign: false },
+
+            // Punjab Kings
+            { name: "Shreyas Iyer", role: "Batsman", team: "PBKS", category: "Batsman", foreign: false },
+            { name: "Prabhsimran Singh", role: "Batsman", team: "PBKS", category: "Batsman", foreign: false },
+            { name: "Shashank Singh", role: "Batsman", team: "PBKS", category: "Batsman", foreign: false },
+            { name: "Glenn Maxwell", role: "All-Rounder", team: "PBKS", category: "All-Rounder", foreign: true },
+            { name: "Marcus Stoinis", role: "All-Rounder", team: "PBKS", category: "All-Rounder", foreign: true },
+            { name: "Yuzvendra Chahal", role: "Bowler", team: "PBKS", category: "Bowler", foreign: false },
+            { name: "Arshdeep Singh", role: "Bowler", team: "PBKS", category: "Bowler", foreign: false },
+            { name: "Kagiso Rabada", role: "Bowler", team: "PBKS", category: "Bowler", foreign: true },
+            { name: "Harshal Patel", role: "Bowler", team: "PBKS", category: "Bowler", foreign: false },
+            { name: "Rahul Chahar", role: "Bowler", team: "PBKS", category: "Bowler", foreign: false },
+
+            // Rajasthan Royals
+            { name: "Sanju Samson", role: "Wicket-Keeper", team: "RR", category: "Wicket-Keeper", foreign: false },
+            { name: "Yashasvi Jaiswal", role: "Batsman", team: "RR", category: "Batsman", foreign: false },
+            { name: "Riyan Parag", role: "All-Rounder", team: "RR", category: "All-Rounder", foreign: false },
+            { name: "Shimron Hetmyer", role: "All-Rounder", team: "RR", category: "All-Rounder", foreign: true },
+            { name: "Wanindu Hasaranga", role: "All-Rounder", team: "RR", category: "All-Rounder", foreign: true },
+            { name: "Jofra Archer", role: "Bowler", team: "RR", category: "Bowler", foreign: true },
+            { name: "Tushar Deshpande", role: "Bowler", team: "RR", category: "Bowler", foreign: false },
+            { name: "Fazalhaq Farooqi", role: "Bowler", team: "RR", category: "Bowler", foreign: true },
+            { name: "Trent Boult", role: "Bowler", team: "RR", category: "Bowler", foreign: true },
+            { name: "Sandeep Sharma", role: "Bowler", team: "RR", category: "Bowler", foreign: false },
+
+            // Sunrisers Hyderabad
+            { name: "Pat Cummins", role: "All-Rounder", team: "SRH", category: "All-Rounder", foreign: true },
+            { name: "Travis Head", role: "Batsman", team: "SRH", category: "Batsman", foreign: true },
+            { name: "Abhishek Sharma", role: "All-Rounder", team: "SRH", category: "All-Rounder", foreign: false },
+            { name: "Heinrich Klaasen", role: "Wicket-Keeper", team: "SRH", category: "Wicket-Keeper", foreign: true },
+            { name: "Nitish Kumar Reddy", role: "All-Rounder", team: "SRH", category: "All-Rounder", foreign: false },
+            { name: "Mohammed Shami", role: "Bowler", team: "SRH", category: "Bowler", foreign: false },
+            { name: "Rahul Chahar", role: "Bowler", team: "SRH", category: "Bowler", foreign: false },
+            { name: "Umran Malik", role: "Bowler", team: "SRH", category: "Bowler", foreign: false },
+            { name: "Washington Sundar", role: "All-Rounder", team: "SRH", category: "All-Rounder", foreign: false },
+
+            // Gujarat Titans
+            { name: "Shubman Gill", role: "Batsman", team: "GT", category: "Batsman", foreign: false },
+            { name: "Sai Sudharsan", role: "Batsman", team: "GT", category: "Batsman", foreign: false },
+            { name: "Rashid Khan", role: "All-Rounder", team: "GT", category: "All-Rounder", foreign: true },
+            { name: "Jos Buttler", role: "Wicket-Keeper", team: "GT", category: "Wicket-Keeper", foreign: true },
+            { name: "Kagiso Rabada", role: "Bowler", team: "GT", category: "Bowler", foreign: true },
+            { name: "Mohammed Siraj", role: "Bowler", team: "GT", category: "Bowler", foreign: false },
+            { name: "Prasidh Krishna", role: "Bowler", team: "GT", category: "Bowler", foreign: false },
+            { name: "Glenn Phillips", role: "All-Rounder", team: "GT", category: "All-Rounder", foreign: true },
+            { name: "Rahul Tewatia", role: "All-Rounder", team: "GT", category: "All-Rounder", foreign: false },
+
+            // Lucknow Super Giants
+            { name: "Rishabh Pant", role: "Wicket-Keeper", team: "LSG", category: "Wicket-Keeper", foreign: false },
+            { name: "Nicholas Pooran", role: "Wicket-Keeper", team: "LSG", category: "Wicket-Keeper", foreign: true },
+            { name: "Ayush Badoni", role: "All-Rounder", team: "LSG", category: "All-Rounder", foreign: false },
+            { name: "David Miller", role: "Batsman", team: "LSG", category: "Batsman", foreign: true },
+            { name: "Mitchell Marsh", role: "All-Rounder", team: "LSG", category: "All-Rounder", foreign: true },
+            { name: "Avesh Khan", role: "Bowler", team: "LSG", category: "Bowler", foreign: false },
+            { name: "Ravi Bishnoi", role: "Bowler", team: "LSG", category: "Bowler", foreign: false },
+            { name: "Mayank Yadav", role: "Bowler", team: "LSG", category: "Bowler", foreign: false },
+            { name: "Abdul Samad", role: "All-Rounder", team: "LSG", category: "All-Rounder", foreign: false },
+        ];
+
+        // Game State
+        let gameState = {
+            player1: { name: "", team: [], foreignCount: 0, captain: null, viceCaptain: null, keeper: null },
+            player2: { name: "", team: [], foreignCount: 0, captain: null, viceCaptain: null, keeper: null },
+            currentPlayer: 1,
+            pickedPlayers: [],
+            currentFilter: 'ALL',
+            searchTerm: ''
+        };
+
+        let draggedElement = null;
+        let draggedIndex = null;
+        let draggedTeam = null;
+
+        function startDraft() {
+            const p1 = document.getElementById('player1Name').value.trim();
+            const p2 = document.getElementById('player2Name').value.trim();
+
+            if (!p1 || !p2) {
+                alert('Please enter both player names!');
+                return;
+            }
+
+            gameState.player1.name = p1;
+            gameState.player2.name = p2;
+
+            document.getElementById('setupScreen').style.display = 'none';
+            document.getElementById('draftScreen').style.display = 'block';
+
+            document.getElementById('p1NameDisplay').textContent = p1;
+            document.getElementById('p2NameDisplay').textContent = p2;
+            document.getElementById('team1Header').textContent = p1 + "'s Team";
+            document.getElementById('team2Header').textContent = p2 + "'s Team";
+
+            updateTurnIndicator();
+            renderPlayers();
+        }
+
+        function updateTurnIndicator() {
+            const currentName = gameState.currentPlayer === 1 ? gameState.player1.name : gameState.player2.name;
+            document.getElementById('currentTurn').textContent = "🎯 " + currentName + "'s Turn to Pick";
+            
+            document.getElementById('p1Count').textContent = gameState.player1.team.length + '/11';
+            document.getElementById('p2Count').textContent = gameState.player2.team.length + '/11';
+            document.getElementById('p1ForeignCount').textContent = '✈️ Overseas: ' + gameState.player1.foreignCount + '/4';
+            document.getElementById('p2ForeignCount').textContent = '✈️ Overseas: ' + gameState.player2.foreignCount + '/4';
+        }
+
+        function renderPlayers() {
+            const grid = document.getElementById('playerGrid');
+            grid.innerHTML = '';
+
+            let filteredPlayers = players.filter(player => {
+                const matchesFilter = gameState.currentFilter === 'ALL' || player.category === gameState.currentFilter;
+                const matchesSearch = player.name.toLowerCase().includes(gameState.searchTerm.toLowerCase());
+                return matchesFilter && matchesSearch;
+            });
+
+            filteredPlayers.forEach(player => {
+                const isPicked = gameState.pickedPlayers.includes(player.name);
+                const card = document.createElement('div');
+                card.className = 'player-card' + (isPicked ? ' picked' : '');
+                card.innerHTML = `
+                    <h4>${player.foreign ? '✈️ ' : ''}${player.name}</h4>
+                    <div class="role">${player.role}</div>
+                    <div class="team">${player.team}</div>
+                `;
+                
+                if (!isPicked) {
+                    card.onclick = () => pickPlayer(player);
+                }
+                
+                grid.appendChild(card);
+            });
+        }
+
+        function showWarning(message) {
+            const warning = document.getElementById('warningMessage');
+            warning.textContent = message;
+            warning.style.display = 'block';
+            setTimeout(() => {
+                warning.style.display = 'none';
+            }, 3000);
+        }
+
+        function pickPlayer(player) {
+            const currentTeam = gameState.currentPlayer === 1 ? gameState.player1 : gameState.player2;
+            
+            if (currentTeam.team.length >= 11) {
+                showWarning('⚠️ Team is full! You already have 11 players.');
+                return;
+            }
+
+            if (player.foreign && currentTeam.foreignCount >= 4) {
+                showWarning('⚠️ 4 OVERSEAS PLAYERS EXCEEDED! You can only have 4 foreign players.');
+                return;
+            }
+
+            currentTeam.team.push(player);
+            gameState.pickedPlayers.push(player.name);
+            
+            if (player.foreign) {
+                currentTeam.foreignCount++;
+            }
+
+            updateTeamDisplay();
+            
+            if (gameState.player1.team.length === 11 && gameState.player2.team.length === 11) {
+                showResults();
+                return;
+            }
+
+            gameState.currentPlayer = gameState.currentPlayer === 1 ? 2 : 1;
+            updateTurnIndicator();
+            renderPlayers();
+        }
+
+        function updateTeamDisplay() {
+            updateSingleTeamDisplay('team1List', gameState.player1, 1);
+            updateSingleTeamDisplay('team2List', gameState.player2, 2);
+        }
+
+        function updateSingleTeamDisplay(listId, teamData, teamNumber) {
+            const list = document.getElementById(listId);
+            list.innerHTML = '';
+
+            teamData.team.forEach((player, index) => {
+                const li = document.createElement('li');
+                li.draggable = true;
+                li.dataset.index = index;
+                li.dataset.team = teamNumber;
+                
+                li.innerHTML = `
+                    <div class="player-position">
+                        <div class="position-number">${index + 1}</div>
+                        <div class="player-info-drag">
+                            <div class="player-name">${player.foreign ? '<span class="foreign-icon">✈️</span>' : ''}${player.name}</div>
+                            <div class="player-role">${player.role}</div>
+                        </div>
+                    </div>
+                `;
+
+                // Drag and Drop Events
+                li.addEventListener('dragstart', handleDragStart);
+                li.addEventListener('dragover', handleDragOver);
+                li.addEventListener('drop', handleDrop);
+                li.addEventListener('dragend', handleDragEnd);
+                
+                list.appendChild(li);
+            });
+        }
+
+        function handleDragStart(e) {
+            draggedElement = e.currentTarget;
+            draggedIndex = parseInt(e.currentTarget.dataset.index);
+            draggedTeam = parseInt(e.currentTarget.dataset.team);
+            e.currentTarget.classList.add('dragging');
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            const afterElement = e.currentTarget;
+            if (afterElement !== draggedElement && afterElement.dataset.team === draggedElement.dataset.team) {
+                afterElement.classList.add('drag-over');
+            }
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            const dropTarget = e.currentTarget;
+            dropTarget.classList.remove('drag-over');
+            
+            if (dropTarget !== draggedElement && dropTarget.dataset.team === draggedElement.dataset.team) {
+                const dropIndex = parseInt(dropTarget.dataset.index);
+                const team = draggedTeam === 1 ? gameState.player1 : gameState.player2;
+                
+                // Reorder array
+                const [movedPlayer] = team.team.splice(draggedIndex, 1);
+                team.team.splice(dropIndex, 0, movedPlayer);
+                
+                updateTeamDisplay();
+            }
+        }
+
+        function handleDragEnd(e) {
+            e.currentTarget.classList.remove('dragging');
+            document.querySelectorAll('.drag-over').forEach(el => el.classList.remove('drag-over'));
+        }
+
+        function filterByRole(role) {
+            gameState.currentFilter = role;
+            
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            renderPlayers();
+        }
+
+        function filterPlayers() {
+            gameState.searchTerm = document.getElementById('searchPlayer').value;
+            renderPlayers();
+        }
+
+        function showResults() {
+            document.getElementById('draftScreen').style.display = 'none';
+            document.getElementById('resultsScreen').style.display = 'block';
+            
+            createConfetti();
+            populateLeadershipSelections();
+        }
+
+        function createConfetti() {
+            const container = document.getElementById('confettiContainer');
+            const colors = ['#ffd700', '#ff6b6b', '#4ecdc4', '#45b7d1', '#f7fff7', '#ffed4e'];
+            
+            for (let i = 0; i < 150; i++) {
+                setTimeout(() => {
+                    const confetti = document.createElement('div');
+                    confetti.className = 'confetti';
+                    confetti.style.left = Math.random() * window.innerWidth + 'px';
+                    confetti.style.background = colors[Math.floor(Math.random() * colors.length)];
+                    confetti.style.animationDelay = Math.random() * 3 + 's';
+                    confetti.style.animationDuration = (2 + Math.random() * 2) + 's';
+                    container.appendChild(confetti);
+                    
+                    setTimeout(() => confetti.remove(), 5000);
+                }, i * 25);
+            }
+        }
+
+        function populateLeadershipSelections() {
+            document.getElementById('leaderTeam1Name').textContent = gameState.player1.name;
+            document.getElementById('leaderTeam2Name').textContent = gameState.player2.name;
+
+            const selects = ['captain1', 'viceCaptain1', 'keeper1', 'captain2', 'viceCaptain2', 'keeper2'];
+            selects.forEach(id => {
+                const select = document.getElementById(id);
+                select.innerHTML = '<option value="">Select Player</option>';
+            });
+
+            gameState.player1.team.forEach(player => {
+                ['captain1', 'viceCaptain1', 'keeper1'].forEach(id => {
+                    const option = document.createElement('option');
+                    option.value = player.name;
+                    option.textContent = player.name;
+                    document.getElementById(id).appendChild(option);
+                });
+            });
+
+            gameState.player2.team.forEach(player => {
+                ['captain2', 'viceCaptain2', 'keeper2'].forEach(id => {
+                    const option = document.createElement('option');
+                    option.value = player.name;
+                    option.textContent = player.name;
+                    document.getElementById(id).appendChild(option);
+                });
+            });
+        }
+
+        function confirmLeadership() {
+            const cap1 = document.getElementById('captain1').value;
+            const vc1 = document.getElementById('viceCaptain1').value;
+            const wk1 = document.getElementById('keeper1').value;
+            const cap2 = document.getElementById('captain2').value;
+            const vc2 = document.getElementById('viceCaptain2').value;
+            const wk2 = document.getElementById('keeper2').value;
+
+            if (!cap1 || !vc1 || !wk1 || !cap2 || !vc2 || !wk2) {
+                alert('Please select all leadership positions for both teams!');
+                return;
+            }
+
+            if (cap1 === vc1 || cap2 === vc2) {
+                alert('Captain and Vice-Captain must be different players!');
+                return;
+            }
+
+            gameState.player1.captain = cap1;
+            gameState.player1.viceCaptain = vc1;
+            gameState.player1.keeper = wk1;
+            gameState.player2.captain = cap2;
+            gameState.player2.viceCaptain = vc2;
+            gameState.player2.keeper = wk2;
+
+            document.getElementById('leadershipSelection').style.display = 'none';
+            document.getElementById('teamsComparison').style.display = 'grid';
+
+            renderFinalTeamBattingOrder('finalTeam1', gameState.player1);
+            renderFinalTeamBattingOrder('finalTeam2', gameState.player2);
+        }
+
+        function renderFinalTeamBattingOrder(elementId, playerData) {
+            const container = document.getElementById(elementId);
+            
+            let html = `<h3>🏏 ${playerData.name}'s Playing XI 🏏</h3>`;
+            html += `<div class="batting-order-title">⚡ BATTING ORDER ⚡</div>`;
+            html += `<ul class="batting-order-list">`;
+
+            playerData.team.forEach((player, index) => {
+                const badges = [];
+                if (player.name === playerData.captain) {
+                    badges.push('<span class="leadership-badge captain">C</span>');
+                }
+                if (player.name === playerData.viceCaptain) {
+                    badges.push('<span class="leadership-badge vc">VC</span>');
+                }
+                if (player.name === playerData.keeper) {
+                    badges.push('<span class="leadership-badge wk">WK</span>');
+                }
+
+                html += `
+                    <li>
+                        <div class="batting-position-number">${index + 1}</div>
+                        <div class="batting-player-details">
+                            <div class="batting-player-name">
+                                ${player.foreign ? '✈️ ' : ''}${player.name}
+                                ${badges.join('')}
+                            </div>
+                            <div class="batting-player-info">
+                                <span>${player.role}</span>
+                                <span>•</span>
+                                <span>${player.team}</span>
+                            </div>
+                        </div>
+                    </li>
+                `;
+            });
+
+            html += `</ul>`;
+            container.innerHTML = html;
+        }
+
+        function resetDraft() {
+            location.reload();
+        }
+    </script>
+</body>
+</html>
