@@ -860,10 +860,10 @@
             25% { transform: translateX(-12px); }
             75% { transform: translateX(12px); }
         }
-    </style>
-    #setupScreen {
+        #setupScreen {
   display: none;
 }
+    </style>
 
 
 </head>
@@ -1078,6 +1078,12 @@ socket.on("draftUpdate", ({ state, yourTurn }) => {
 
   document.getElementById("setupScreen").style.display = "none";
   document.getElementById("draftScreen").style.display = "block";
+const totalPicked =
+  state.player1.team.length + state.player2.team.length;
+
+if (totalPicked === 22) {
+  showResults();
+}
 
   // ✅ SET NAMES FROM SERVER
   document.getElementById("p1NameDisplay").textContent = state.player1.name;
